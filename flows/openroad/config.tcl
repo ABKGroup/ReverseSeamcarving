@@ -1,5 +1,5 @@
 # Portable configuration for the released OpenROAD flow.
-# Set ASAP7_ROOT to the external ASAP7 PDK directory before invoking OpenROAD.
+# ASAP7_ROOT can override the bundled pdk/ASAP7 directory.
 proc setting {name default} {
     if {[info exists ::env($name)] && $::env($name) ne ""} {
         return $::env($name)
@@ -8,10 +8,13 @@ proc setting {name default} {
 }
 set flow_dir [file dirname [file normalize [info script]]]
 set repo_root [file normalize [file join $flow_dir ../..]]
-if {![info exists ::env(ASAP7_ROOT)]} {
-    error "Set ASAP7_ROOT to your ASAP7 PDK directory."
+set pdk [file normalize [setting ASAP7_ROOT [file join $repo_root pdk ASAP7]]]
+# Accept compressed bundled files and uncompressed external installations.
+proc pdk_file {relative_path} {
+    set path [file join $::pdk $relative_path]
+    if {[file exists ${path}.gz]} {return ${path}.gz}
+    return $path
 }
-set pdk [file normalize $::env(ASAP7_ROOT)]
 set design [setting RSC_DESIGN jpeg]
 set design_top(jpeg) {jpeg_encoder}
 set design_clocks(jpeg) [list {clk}]
@@ -29,26 +32,26 @@ if {![info exists design_top($design)]} {error "Unknown design $design"}
 set cfg(top) $design_top($design)
 set cfg(clock_ports) $design_clocks($design)
 set cfg(netlist) [setting RSC_NETLIST [file join $repo_root designs $design netlist.v]]
-set cfg(tech_lef) [file join $pdk lef asap7_tech_1x_201209.lef]
-set cfg(cell_lef) [file join $pdk lef asap7sc7p5t_28_R_1x_220121a.lef]
+set cfg(tech_lef) [pdk_file lef/asap7_tech_1x_201209.lef]
+set cfg(cell_lef) [pdk_file lef/asap7sc7p5t_28_R_1x_220121a.lef]
 set cfg(lib_FF) [list \
-    [file join $pdk lib asap7sc7p5t_AO_RVT_FF_nldm_211120.lib] \
-    [file join $pdk lib asap7sc7p5t_DFFHQNH2V2X_RVT_FF_nldm_FAKE.lib] \
-    [file join $pdk lib asap7sc7p5t_DFFHQNV2X_RVT_FF_nldm_FAKE.lib] \
-    [file join $pdk lib asap7sc7p5t_DFFHQNV4X_RVT_FF_nldm_FAKE.lib] \
-    [file join $pdk lib asap7sc7p5t_INVBUF_RVT_FF_nldm_220122.lib] \
-    [file join $pdk lib asap7sc7p5t_OA_RVT_FF_nldm_211120.lib] \
-    [file join $pdk lib asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib] \
-    [file join $pdk lib asap7sc7p5t_SIMPLE_RVT_FF_nldm_250407.lib]]
+    [pdk_file lib/asap7sc7p5t_AO_RVT_FF_nldm_211120.lib] \
+    [pdk_file lib/asap7sc7p5t_DFFHQNH2V2X_RVT_FF_nldm_FAKE.lib] \
+    [pdk_file lib/asap7sc7p5t_DFFHQNV2X_RVT_FF_nldm_FAKE.lib] \
+    [pdk_file lib/asap7sc7p5t_DFFHQNV4X_RVT_FF_nldm_FAKE.lib] \
+    [pdk_file lib/asap7sc7p5t_INVBUF_RVT_FF_nldm_220122.lib] \
+    [pdk_file lib/asap7sc7p5t_OA_RVT_FF_nldm_211120.lib] \
+    [pdk_file lib/asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib] \
+    [pdk_file lib/asap7sc7p5t_SIMPLE_RVT_FF_nldm_250407.lib]]
 set cfg(lib_SS) [list \
-    [file join $pdk lib asap7sc7p5t_AO_RVT_SS_nldm_211120.lib] \
-    [file join $pdk lib asap7sc7p5t_DFFHQNH2V2X_RVT_SS_nldm_FAKE.lib] \
-    [file join $pdk lib asap7sc7p5t_DFFHQNV2X_RVT_SS_nldm_FAKE.lib] \
-    [file join $pdk lib asap7sc7p5t_DFFHQNV4X_RVT_SS_nldm_FAKE.lib] \
-    [file join $pdk lib asap7sc7p5t_INVBUF_RVT_SS_nldm_220122.lib] \
-    [file join $pdk lib asap7sc7p5t_OA_RVT_SS_nldm_211120.lib] \
-    [file join $pdk lib asap7sc7p5t_SEQ_RVT_SS_nldm_220123.lib] \
-    [file join $pdk lib asap7sc7p5t_SIMPLE_RVT_SS_nldm_211120.lib]]
+    [pdk_file lib/asap7sc7p5t_AO_RVT_SS_nldm_211120.lib] \
+    [pdk_file lib/asap7sc7p5t_DFFHQNH2V2X_RVT_SS_nldm_FAKE.lib] \
+    [pdk_file lib/asap7sc7p5t_DFFHQNV2X_RVT_SS_nldm_FAKE.lib] \
+    [pdk_file lib/asap7sc7p5t_DFFHQNV4X_RVT_SS_nldm_FAKE.lib] \
+    [pdk_file lib/asap7sc7p5t_INVBUF_RVT_SS_nldm_220122.lib] \
+    [pdk_file lib/asap7sc7p5t_OA_RVT_SS_nldm_211120.lib] \
+    [pdk_file lib/asap7sc7p5t_SEQ_RVT_SS_nldm_220123.lib] \
+    [pdk_file lib/asap7sc7p5t_SIMPLE_RVT_SS_nldm_211120.lib]]
 set cfg(rc) [file join $flow_dir support rc.tcl]
 set cfg(tracks) [file join $flow_dir support tracks.tcl]
 set cfg(rcx) [file join $flow_dir support rcx.rules]

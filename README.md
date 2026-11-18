@@ -18,8 +18,9 @@ requested utilization increment within the blocks distinguish the carved cases.
 | `flows/openroad/build_handoff.tcl` | Import a released repaired netlist into OpenDB |
 | `flows/openroad/preprocess.tcl` | Original constant-net mapping, tie-fanout repair, and pre-floorplan repair procedure |
 | `flows/openroad/support/` | RC, track, and extraction support used in the experiments |
+| `pdk/ASAP7/` | Selected RVT NLDM Liberty and gzipped LEF files used by the flow |
 | `designs/` | Six repaired OpenROAD Verilog netlists and their SDCs |
-| `genus/synthesize.tcl` | Genus synthesis driver used to create the mapped inputs |
+| `flow/genus/synthesize.tcl` | Genus synthesis driver used to create the mapped inputs |
 | `data/` | OpenROAD DOE definitions, per-run measurements, and summary CSVs |
 
 ## Flow modules
@@ -65,7 +66,7 @@ maps constant nets onto ASAP7 tie cells, repairs tie-cell fanout, and runs
 `repair_design -pre_placement`, allowing signal buffering and cell resizing.
 Baseline and RSC share this resulting netlist. Existing synthesis buffers remain.
 
-The data contains OpenROAD results. The `genus/` directory contains the synthesis
+The data contains OpenROAD results. The `flow/genus/` directory contains the synthesis
 driver only. No Genus-only mapped netlists or Innovus place-and-route flow are
 included.
 
@@ -141,13 +142,13 @@ are completed before either routing stage.
 
 The experiments use OpenROAD commit
 `e2820c8efda9ccf9949ec439456f699615b0dc47`, built with the commands used in these
-Tcl files. The PDK must provide
+Tcl files. The bundled PDK provides
 the ASAP7 RVT LEF and SS/FF Liberty files listed in `config.tcl`.
 
-From the repository root, set the PDK location and the configuration file.
+From the repository root, select the configuration file. The flow uses the
+bundled `pdk/ASAP7` by default.
 
 ```bash
-export ASAP7_ROOT=/path/to/ASAP7
 export ORD_CONFIG="$PWD/flows/openroad/config.tcl"
 export RSC_DESIGN=jpeg
 ```
@@ -190,7 +191,7 @@ another output directory. Use the same utilization, seed, and overflow target.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `ASAP7_ROOT` | Required | External PDK root |
+| `ASAP7_ROOT` | `pdk/ASAP7` | Optional PDK-root override |
 | `ORD_CONFIG` | Required | Path to `flows/openroad/config.tcl` |
 | `RSC_DESIGN` | `jpeg` | Released design identifier |
 | `RSC_UTIL` | `0.90` | Floorplan utilization |
@@ -288,7 +289,7 @@ Cell area is the sum of instantiated LEF master areas, in square micrometers.
 
 ## Genus synthesis driver
 
-`genus/synthesize.tcl` records the upstream synthesis recipe. It runs
+`flow/genus/synthesize.tcl` records the upstream synthesis recipe. It runs
 `syn_generic`, `syn_map`, and `syn_opt` with the low-effort settings used by the
 source driver. It expects user-supplied RTL and the following environment
 variables.
@@ -310,9 +311,15 @@ SweRV, and MemPool are reflected in those supplied inputs.
 
 ## Technology
 
-The experiments use external ASAP7 RVT technology/cell LEFs and SS/FF Liberty
-views. The exact filenames are listed in `flows/openroad/config.tcl`. The
-technology files and tool installations must be supplied separately.
+The bundled `pdk/ASAP7` contains the two LEFs and sixteen SS/FF RVT NLDM
+Liberty files selected by the OpenROAD flow, plus their license files. They
+come from `/home/jal216/pdk/ASAP7`, the installation used for the experiments.
+LEF and Liberty files are gzip-compressed and read directly by OpenROAD.
+Exact filenames are listed in `flows/openroad/config.tcl`.
+
+The bundle omits GDS, CCS libraries, unused threshold-voltage variants, the
+6-track platform, datasheets, and Cadence-only technology views. OpenROAD and
+Genus installations are supplied separately.
 
 The small RC, track, and OpenRCX support files in `flows/openroad/support/`
 originate from the ASAP7 platform support in
