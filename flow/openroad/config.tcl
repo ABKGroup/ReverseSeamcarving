@@ -69,6 +69,6 @@ set cfg(lib_SS) [list \
     [file join $pdk lib asap7sc7p5t_OA_RVT_SS_nldm_211120.lib.gz] \
     [file join $pdk lib asap7sc7p5t_SEQ_RVT_SS_nldm_220123.lib.gz] \
     [file join $pdk lib asap7sc7p5t_SIMPLE_RVT_SS_nldm_211120.lib.gz]]
-set cfg(rc) [file join $flow_dir support rc.tcl]
-set cfg(tracks) [file join $flow_dir support tracks.tcl]
-set cfg(rcx) [file join $flow_dir support rcx.rules]
+set cfg(rc) [file join $pdk setRC.tcl]
+set cfg(tracks) [file join $pdk makeTracks.tcl]
+set cfg(rcx) [file join $pdk rcx.rules]

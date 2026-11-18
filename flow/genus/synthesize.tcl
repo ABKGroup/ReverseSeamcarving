@@ -1,3 +1,6 @@
+# Underlying commands and reports are copyrighted by Cadence. 
+# We thank Cadence for granting permission to share our research to help promote and foster the next generation of innovators.
+
 # Genus RTL-to-RVT synthesis driver.
 source [file join [file dirname [file normalize [info script]]] config.tcl]
 file mkdir $synth(out)

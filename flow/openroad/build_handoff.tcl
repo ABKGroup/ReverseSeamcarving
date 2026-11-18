@@ -1,4 +1,4 @@
-# Reconstruct the input checkpoint from the released repaired Verilog.
+# Create an OpenDB checkpoint from the preprocessed Verilog netlist.
 source [file join [file dirname [file normalize [info script]]] config.tcl]
 set script_dir [file dirname [file normalize [info script]]]
 foreach module {common platform} {
