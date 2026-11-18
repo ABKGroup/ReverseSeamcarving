@@ -1,5 +1,5 @@
 # Stage coordinator. Physical algorithms live in the sourced modules.
-source $::env(ORD_CONFIG)
+source [file join [file dirname [file normalize [info script]]] config.tcl]
 set script_dir [file dirname [file normalize [info script]]]
 foreach module {
     common platform seams density placement io cts timing
@@ -8,6 +8,7 @@ foreach module {
     source [file join $script_dir ${module}.tcl]
 }
 
+rsc::prepare_output
 rsc::load_design
 if {$::cfg(stage) eq "grt"} {
     rsc::initialize_floorplan

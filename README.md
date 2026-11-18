@@ -13,11 +13,11 @@ requested utilization increment within the blocks distinguish the carved cases.
 
 | Path | Contents |
 | --- | --- |
-| `flows/openroad/flow.tcl` | Stage coordinator |
-| `flows/openroad/config.tcl` | Portable design, technology, and experiment configuration |
-| `flows/openroad/build_handoff.tcl` | Import a released repaired netlist into OpenDB |
-| `flows/openroad/preprocess.tcl` | Original constant-net mapping, tie-fanout repair, and pre-floorplan repair procedure |
-| `flows/openroad/support/` | RC, track, and extraction support used in the experiments |
+| `flow/openroad/flow.tcl` | Stage coordinator |
+| `flow/openroad/config.tcl` | Portable design, technology, and experiment configuration |
+| `flow/openroad/build_handoff.tcl` | Import a released repaired netlist into OpenDB |
+| `flow/openroad/preprocess.tcl` | Original constant-net mapping, tie-fanout repair, and pre-floorplan repair procedure |
+| `flow/openroad/support/` | RC, track, and extraction support used in the experiments |
 | `pdk/ASAP7/` | Selected RVT NLDM Liberty and gzipped LEF files used by the flow |
 | `designs/` | Six repaired OpenROAD Verilog netlists and their SDCs |
 | `flow/genus/synthesize.tcl` | Genus synthesis driver used to create the mapped inputs |
@@ -26,7 +26,7 @@ requested utilization increment within the blocks distinguish the carved cases.
 ## Flow modules
 
 ```text
-flows/openroad/
+flow/openroad/
 ├── flow.tcl             Stage ordering and GRT/DRT entry point
 ├── config.tcl           User parameters and design/technology paths
 ├── common.tcl           Output-path and text-file helpers
@@ -141,81 +141,73 @@ are completed before either routing stage.
 ## Running an individual configuration
 
 The experiments use OpenROAD commit
-`e2820c8efda9ccf9949ec439456f699615b0dc47`, built with the commands used in these
-Tcl files. The bundled PDK provides
-the ASAP7 RVT LEF and SS/FF Liberty files listed in `config.tcl`.
+`e2820c8efda9ccf9949ec439456f699615b0dc47`. The flow reads the bundled
+technology files through explicit paths in `flow/openroad/config.tcl`.
 
-From the repository root, select the configuration file. The flow uses the
-bundled `pdk/ASAP7` by default.
+Edit `design` and the `cfg` settings in that file for the desired case. For
+example, the following settings select JPEG at 90% utilization with vertical
+seam width 15 sites, horizontal seam height 2 rows, paired pitch 260/65,
+and block-utilization increment +3%.
 
-```bash
-export ORD_CONFIG="$PWD/flows/openroad/config.tcl"
-export RSC_DESIGN=jpeg
+```tcl
+set design jpeg
+array set cfg {
+    stage grt
+    threads 8
+    util 0.90
+    width 15
+    height 2
+    pitch_x 260
+    pitch_y 65
+    delta 0.03
+    placement_seed 1
+    placement_overflow 0.05
+}
 ```
 
-Reconstruct the shared repaired-netlist handoff once for the chosen design.
+From the repository root, reconstruct the repaired input checkpoint once for
+the selected design, then run placement, CTS, and global routing.
 
 ```bash
-openroad -exit flows/openroad/build_handoff.tcl
+openroad -exit flow/openroad/build_handoff.tcl
+openroad -exit flow/openroad/flow.tcl
 ```
 
-Run a seamcarved configuration through placement, CTS, and global routing.
+For detailed routing, change `stage` to `detail` in the same configuration
+and invoke the flow again. It restores `grt.odb` and `route.guide` from the
+same output directory.
 
 ```bash
-export RSC_UTIL=0.90
-export RSC_WIDTH_SITES=15
-export RSC_HEIGHT_ROWS=2
-export RSC_PITCH_SITES=260
-export RSC_PITCH_ROWS=65
-export RSC_DELTA=0.03
-export RSC_SEED=1
-export RSC_OVERFLOW=0.05
-export RSC_OUT="$PWD/work/jpeg_example"
-export RSC_STAGE=grt
-openroad -exit flows/openroad/flow.tcl
+openroad -exit flow/openroad/flow.tcl
 ```
 
-Continue that exact saved configuration through detailed routing.
+For the baseline, set `width` and `height` to zero. Keep the same utilization,
+placement seed, and overflow target. Output paths are generated from these
+configuration values under `work/`.
 
-```bash
-export RSC_STAGE=detail
-openroad -exit flows/openroad/flow.tcl
-```
+### OpenROAD settings
 
-The DRT command uses `grt.odb` and `route.guide` in the same `RSC_OUT` directory.
-Keep the design and configuration variables the same between these stages.
-For the corresponding baseline, set both seam dimensions to zero and choose
-another output directory. Use the same utilization, seed, and overflow target.
+| Setting | Meaning |
+| --- | --- |
+| `design` | Released design identifier |
+| `cfg(stage)` | `grt` or `detail` |
+| `cfg(threads)` | Threads per OpenROAD process |
+| `cfg(util)` | Floorplan utilization as a fraction |
+| `cfg(width)`, `cfg(height)` | Vertical seam width in sites and horizontal seam height in rows |
+| `cfg(pitch_x)`, `cfg(pitch_y)` | Paired X pitch in sites and Y pitch in rows |
+| `cfg(delta)` | Additive block-utilization increment |
+| `cfg(placement_seed)` | Global placement random seed |
+| `cfg(placement_overflow)` | Main-placement stopping overflow target |
+| `cfg(netlist)`, `cfg(sdc)` | Input Verilog and constraints paths |
+| `cfg(out)` | Output directory for the physical configuration |
+| `cfg(handoff_odb)` | Repaired input checkpoint |
 
-### Configuration reference
-
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `ASAP7_ROOT` | `pdk/ASAP7` | Optional PDK-root override |
-| `ORD_CONFIG` | Required | Path to `flows/openroad/config.tcl` |
-| `RSC_DESIGN` | `jpeg` | Released design identifier |
-| `RSC_UTIL` | `0.90` | Floorplan utilization |
-| `RSC_WIDTH_SITES` | `0` | Vertical seam width |
-| `RSC_HEIGHT_ROWS` | `0` | Horizontal seam height |
-| `RSC_PITCH_SITES` | `300` | X seam pitch |
-| `RSC_PITCH_ROWS` | `75` | Y seam pitch |
-| `RSC_DELTA` | `0.02` | Additive block-utilization increment |
-| `RSC_SEED` | `1` | Global placement random seed |
-| `RSC_OVERFLOW` | `0.05` | Main-placement stopping overflow target |
-| `RSC_THREADS` | `8` | Threads per OpenROAD process |
-| `RSC_STAGE` | `grt` | `grt` or `detail` |
-| `RSC_OUT` | Generated under `work/` | Outputs for this physical configuration |
-| `RSC_HANDOFF` | `work/handoffs/<design>/handoff.odb` | Reconstructed repaired input |
-| `RSC_NETLIST` | Released `netlist.v` | Optional alternate mapped Verilog input |
-| `RSC_SDC` | Released `constraints.sdc` | Optional alternate constraints |
-
-`preprocess.tcl` is provided for inspecting or applying the original preparation
-procedure to an alternate, unrepaired mapped input. The released netlists have
-already undergone this step. To use preprocessing on another mapped input,
-set `RSC_NETLIST`, `RSC_SDC`, and `RSC_OUT` to that input and a dedicated handoff
-output directory, then invoke `openroad -exit flows/openroad/preprocess.tcl`.
-It writes `handoff.odb` and `netlist.v` to that directory. Use the resulting ODB
-as `RSC_HANDOFF` for subsequent physical runs.
+`preprocess.tcl` prepares an alternate unrepaired mapped input. Set the
+`cfg(netlist)`, `cfg(sdc)`, and `cfg(out)` paths in `config.tcl` for that input
+and a dedicated output directory, then run
+`openroad -exit flow/openroad/preprocess.tcl`. It writes the repaired
+`netlist.v` and `handoff.odb` there. Point `cfg(handoff_odb)` at the resulting
+checkpoint for subsequent physical runs.
 
 ## Experimental coverage
 
@@ -289,39 +281,40 @@ Cell area is the sum of instantiated LEF master areas, in square micrometers.
 
 ## Genus synthesis driver
 
-`flow/genus/synthesize.tcl` records the upstream synthesis recipe. It runs
-`syn_generic`, `syn_map`, and `syn_opt` with the low-effort settings used by the
-source driver. It expects user-supplied RTL and the following environment
-variables.
+`flow/genus/synthesize.tcl` runs `syn_generic`, `syn_map`, and `syn_opt` with
+high effort. It sources `flow/genus/config.tcl`, which explicitly lists the
+eight bundled TT RVT NLDM libraries. Edit the synthesis settings there.
 
-| Variable | Meaning |
+| Setting | Meaning |
 | --- | --- |
-| `CONTRA2_SYNTH_THREADS` | Synthesis CPU count |
-| `CONTRA2_SYNTH_LIBS` | Space-separated timing-library paths |
-| `CONTRA2_SYNTH_SDC` | Input SDC path |
-| `CONTRA2_SYNTH_TOP` | RTL top module |
-| `CONTRA2_SYNTH_RTL` | Space-separated RTL file paths |
-| `CONTRA2_SYNTH_INCLUDES` | Include directories; may be empty |
-| `CONTRA2_SYNTH_DEFINES` | Preprocessor definitions; may be empty |
-| `CONTRA2_SYNTH_OUT` | Existing output directory |
+| `synth(top)` | RTL top module |
+| `synth(threads)` | Synthesis CPU count |
+| `synth(rtl_files)` | List of RTL source paths to supply |
+| `synth(include_dirs)` | RTL include directories |
+| `synth(defines)` | Preprocessor definitions |
+| `synth(sdc)` | Input constraints path |
+| `synth(out)` | Output directory |
+| `synth(libraries)` | Explicit bundled TT Liberty paths |
 
-The released OpenROAD inputs additionally contain the shared preprocessing
-changes described above. Original macro-removal transformations for CVA6,
-SweRV, and MemPool are reflected in those supplied inputs.
+After setting `synth(rtl_files)` and the corresponding top and constraints,
+run `genus -files flow/genus/synthesize.tcl`. RTL sources are supplied by
+the user. The released netlists are the repaired OpenROAD inputs described
+above. Changes to synthesis settings apply to subsequent synthesis runs.
 
 ## Technology
 
-The bundled `pdk/ASAP7` contains the two LEFs and sixteen SS/FF RVT NLDM
-Liberty files selected by the OpenROAD flow, plus their license files. They
+The bundled `pdk/ASAP7` contains the two LEFs, sixteen SS/FF RVT NLDM Liberty files for OpenROAD,
+and eight TT RVT NLDM Liberty files for Genus, plus their license files. They
 come from `/home/jal216/pdk/ASAP7`, the installation used for the experiments.
 LEF and Liberty files are gzip-compressed and read directly by OpenROAD.
-Exact filenames are listed in `flows/openroad/config.tcl`.
+Exact filenames are listed in `flow/openroad/config.tcl` and
+`flow/genus/config.tcl`.
 
 The bundle omits GDS, CCS libraries, unused threshold-voltage variants, the
 6-track platform, datasheets, and Cadence-only technology views. OpenROAD and
 Genus installations are supplied separately.
 
-The small RC, track, and OpenRCX support files in `flows/openroad/support/`
+The small RC, track, and OpenRCX support files in `flow/openroad/support/`
 originate from the ASAP7 platform support in
 [OpenROAD-flow-scripts](https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts/tree/master/flow/platforms/asap7).
 They provide OpenROAD-compatible estimation and extraction support. The RC

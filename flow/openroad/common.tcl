@@ -9,3 +9,9 @@ proc rsc::write_text {name value} {
     puts $stream $value
     close $stream
 }
+
+proc rsc::prepare_output {} {
+    global cfg
+    file mkdir $cfg(out)
+    file copy -force $cfg(sdc) [output_path input.sdc]
+}

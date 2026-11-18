@@ -1,10 +1,11 @@
 # Prepare an alternate unrepaired mapped netlist before floorplanning.
-source $::env(ORD_CONFIG)
+source [file join [file dirname [file normalize [info script]]] config.tcl]
 set script_dir [file dirname [file normalize [info script]]]
 foreach module {common platform tie_cells} {
     source [file join $script_dir ${module}.tcl]
 }
 
+rsc::prepare_output
 rsc::read_libraries
 read_lef $cfg(tech_lef)
 read_lef $cfg(cell_lef)

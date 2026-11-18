@@ -1,5 +1,5 @@
 # Reconstruct the input checkpoint from the released repaired Verilog.
-source $::env(ORD_CONFIG)
+source [file join [file dirname [file normalize [info script]]] config.tcl]
 set script_dir [file dirname [file normalize [info script]]]
 foreach module {common platform} {
     source [file join $script_dir ${module}.tcl]
