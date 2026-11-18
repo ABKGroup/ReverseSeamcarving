@@ -23,6 +23,7 @@ This repository accompanies the DAC26 submission "*Reverse Seam-Carving: Structu
 | `designs/` | Six repaired OpenROAD Verilog netlists and their SDCs |
 | `flow/genus/synthesize.tcl` | Genus synthesis driver used to create the mapped inputs |
 | `data/` | OpenROAD DOE definitions, per-run measurements, and summary CSVs |
+| `seamgain/` | SeamGain model, its evaluation, and configuration selection |
 
 ## Flow modules
 
@@ -141,6 +142,7 @@ an alternate mapped input. Input and output paths are configured in
 | `data/doe.csv` | Planned configurations for the experiment set |
 | `data/openroad_measurements.csv` | Available per-configuration/per-seed GRT and DRT measurements and completion status |
 | `data/openroad_summary.csv` | Best measured configurations per design, utilization, overflow, and routing stage |
+| `data/openroad_stage_metrics.csv` | Per-run HPWL before and after each legalization step, utilization, and seam geometry of the `control` experiment |
 
 `doe.csv` lists planned configurations for the experiment set. Measurement
 rows record available results for each configuration and seed. Reused results
@@ -173,9 +175,44 @@ networks. DRT summary comparisons use clean completed samples. Per-run rows
 retain available wirelength measurements and native violation counts. Empty
 fields indicate unavailable measurements.
 
+`openroad_stage_metrics.csv` has one row per run of the `control` experiment,
+identified by `design`, `util_pct`, `config` and `placement_seed` as in
+`openroad_measurements.csv`. Empty fields indicate stages that a run did not
+reach.
+
+| Stage-metric column | Definition |
+| --- | --- |
+| `gp_hpwl_um` | HPWL at the end of global placement, in micrometers |
+| `dp_hpwl_um` | HPWL after legalization of the placement |
+| `cts_hpwl_before_dp_um`, `cts_hpwl_after_dp_um` | HPWL before and after the legalization that follows CTS |
+| `utilization_before_dp_pct` | Utilization before legalization of the placement, in percent |
+| `utilization_before_cts_dp_pct` | Utilization before the legalization that follows CTS; the difference to the previous column is the clock-buffer area |
+| `seam_fraction` | Fraction of the core area covered by seams |
+| `seam_utilization` | Requested seam utilization; values below 0.05 are realized as hard blockages |
+| `core_width_um`, `core_height_um` | Core dimensions in micrometers |
+
 `design_statistics.csv` counts the repaired netlist before CTS. Logical-net
 counts cover connected non-supply nets, including clock nets.
 Cell area is the sum of instantiated LEF master areas, in square micrometers.
+
+## SeamGain
+
+`seamgain/` contains the SeamGain model, which predicts the routed-wirelength
+reduction of an RSC configuration from one uniform reference run and selects
+the configuration of a design. `seamgain/README.md` describes the model and the
+scripts.
+
+```bash
+python3 seamgain/evaluate.py     # accuracy, unseen designs, configuration selection
+python3 seamgain/topk.py         # selection with k RSC runs
+python3 seamgain/select_config.py --metrics uniform_metrics.json \
+    --core-width-um 75.762 --core-height-um 75.6
+```
+
+The first two commands reproduce the SeamGain results of the paper from
+`data/openroad_measurements.csv` and `data/openroad_stage_metrics.csv`. The
+third selects the configuration of a design from the metrics file of its
+uniform run (`openroad -exit -metrics uniform_metrics.json flow/openroad/flow.tcl`).
 
 ## Cadence Genus synthesis
 
