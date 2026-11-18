@@ -23,12 +23,7 @@ proc rsc::main_placement {density} {
 
 proc rsc::legalize {} {
     set block [ord::get_db_block]
-    # Partial screens guide global placement only; hard blockages remain.
-    foreach blockage [$block getBlockages] {
-        if {[$blockage getMaxDensity] > 0} {
-            odb::dbBlockage_destroy $blockage
-        }
-    }
+    remove_partial_seams
     set core [$block getCoreArea]
     set dbu [$block getDbUnitsPerMicron]
     set max_distance [expr {

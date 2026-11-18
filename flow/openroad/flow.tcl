@@ -13,7 +13,7 @@ rsc::load_design
 if {$::cfg(stage) eq "grt"} {
     rsc::initialize_floorplan
     rsc::configure_routing_layers
-    rsc::apply_seams
+    rsc::apply_seams $::cfg(util) $::cfg(delta) $::cfg(width) $::cfg(height) $::cfg(pitch_x) $::cfg(pitch_y)
     rsc::freeze_netlist
     set placement_density [rsc::placement_density]
     rsc::initial_placement $placement_density
