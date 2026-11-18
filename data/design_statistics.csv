@@ -1,0 +1,7 @@
+design,top,instances,logical_nets,io_terminals,cell_area_um2,netlist,constraints
+jpeg,jpeg_encoder,48276,48296,47,5169.426480,designs/jpeg/netlist.v,designs/jpeg/constraints.sdc
+ethmac,ethmac,39272,39368,216,5516.299260,designs/ethmac/netlist.v,designs/ethmac/constraints.sdc
+cva6_no_sram,cva6,80293,81114,5257,8459.024400,designs/cva6_no_sram/netlist.v,designs/cva6_no_sram/constraints.sdc
+mempool_tile_no_macro,mempool_tile_wrap,107109,107735,1316,12904.758000,designs/mempool_tile_no_macro/netlist.v,designs/mempool_tile_no_macro/constraints.sdc
+swerv_no_macro,swerv_wrapper,106195,106738,1416,12565.860480,designs/swerv_no_macro/netlist.v,designs/swerv_no_macro/constraints.sdc
+tpu,tpu,37677,37809,389,4010.885100,designs/tpu/netlist.v,designs/tpu/constraints.sdc

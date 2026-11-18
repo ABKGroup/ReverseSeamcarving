@@ -1,0 +1,36 @@
+{
+  "design": "cva6_no_sram",
+  "top": "cva6",
+  "clock_ports": [
+    "clk_i"
+  ],
+  "netlist_stage": "after shared pre-floorplan OpenROAD repair, before placement and CTS",
+  "synthesis_tool": "Cadence Genus",
+  "source_topology": "macro-free",
+  "preprocessing": {
+    "clock_buffers_added": 0,
+    "clock_inverters_added": 0,
+    "constant_endpoints_checked": 9331,
+    "constant_polarity_preserved": true,
+    "cts_not_run": true,
+    "final_instances": 80293,
+    "frozen_instances": 80293,
+    "input_buffers": 1417,
+    "input_instances": 76958,
+    "input_inverters": 14574,
+    "max_nonclock_fanout_after": 11,
+    "max_nonclock_fanout_before": 6122,
+    "no_floorplan": true,
+    "nonclock_nets_over50_after": 0,
+    "nonclock_nets_over50_before": 5,
+    "nonconstant_edges_preserved": true,
+    "physical_ties_added": 9331,
+    "reset_fanout_after": 7,
+    "reset_fanout_before": 6122,
+    "signal_buffers_added": 3335,
+    "signal_cells_resized": 27702,
+    "signal_inverters_added": 0,
+    "signal_repeaters_added": 3335,
+    "synthesis_instances": 67627
+  }
+}

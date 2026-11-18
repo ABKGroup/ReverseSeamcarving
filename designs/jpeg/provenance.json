@@ -1,0 +1,36 @@
+{
+  "design": "jpeg",
+  "top": "jpeg_encoder",
+  "clock_ports": [
+    "clk"
+  ],
+  "netlist_stage": "after shared pre-floorplan OpenROAD repair, before placement and CTS",
+  "synthesis_tool": "Cadence Genus",
+  "source_topology": "original mapped design",
+  "preprocessing": {
+    "clock_buffers_added": 0,
+    "clock_inverters_added": 0,
+    "constant_endpoints_checked": 68,
+    "constant_polarity_preserved": true,
+    "cts_not_run": true,
+    "final_instances": 48276,
+    "frozen_instances": 48276,
+    "input_buffers": 330,
+    "input_instances": 46858,
+    "input_inverters": 5689,
+    "max_nonclock_fanout_after": 10,
+    "max_nonclock_fanout_before": 112,
+    "no_floorplan": true,
+    "nonclock_nets_over50_after": 0,
+    "nonclock_nets_over50_before": 22,
+    "nonconstant_edges_preserved": true,
+    "physical_ties_added": 68,
+    "reset_fanout_after": null,
+    "reset_fanout_before": null,
+    "signal_buffers_added": 1418,
+    "signal_cells_resized": 14868,
+    "signal_inverters_added": 0,
+    "signal_repeaters_added": 1418,
+    "synthesis_instances": 46790
+  }
+}

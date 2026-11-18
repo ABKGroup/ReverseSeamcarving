@@ -1,0 +1,9 @@
+work/
+__pycache__/
+*.pyc
+*.odb
+*.def
+*.spef
+*.enc
+*.enc.dat/
+*.log
