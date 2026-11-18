@@ -1,6 +1,6 @@
-# Reverse Seam-carving
+# Reverse Seam-Carving
 
-Reverse seam-carving (RSC) redistributes placement density to create routing channels
+Reverse Seam-Carving (RSC) redistributes placement density to create routing channels
 between denser blocks of cells. This repository provides the OpenROAD flow,
 the repaired mapped netlists used by that flow, and OpenROAD measurement data
 for reviewing the experiments.
