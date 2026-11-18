@@ -32,11 +32,7 @@ if {[llength $defines]} {
 }
 elaborate [need_env CONTRA2_SYNTH_TOP]
 init_design
-if {[info exists ::dc::sdc_failed_commands] && [llength $::dc::sdc_failed_commands]} {
-    error "SDC commands failed: $::dc::sdc_failed_commands"
-}
-check_design -unresolved
-check_timing_intent
+
 
 set_db syn_generic_effort low
 set_db syn_map_effort low

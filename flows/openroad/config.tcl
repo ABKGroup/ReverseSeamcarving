@@ -13,7 +13,18 @@ if {![info exists ::env(ASAP7_ROOT)]} {
 }
 set pdk [file normalize $::env(ASAP7_ROOT)]
 set design [setting RSC_DESIGN jpeg]
-source [file join $repo_root designs designs.tcl]
+set design_top(jpeg) {jpeg_encoder}
+set design_clocks(jpeg) [list {clk}]
+set design_top(ethmac) {ethmac}
+set design_clocks(ethmac) [list {wb_clk_i} {mtx_clk_pad_i} {mrx_clk_pad_i}]
+set design_top(cva6_no_sram) {cva6}
+set design_clocks(cva6_no_sram) [list {clk_i}]
+set design_top(mempool_tile_no_macro) {mempool_tile_wrap}
+set design_clocks(mempool_tile_no_macro) [list {clk_i}]
+set design_top(swerv_no_macro) {swerv_wrapper}
+set design_clocks(swerv_no_macro) [list {clk}]
+set design_top(tpu) {tpu}
+set design_clocks(tpu) [list {clk}]
 if {![info exists design_top($design)]} {error "Unknown design $design"}
 set cfg(top) $design_top($design)
 set cfg(clock_ports) $design_clocks($design)
@@ -42,7 +53,6 @@ set cfg(rc) [file join $flow_dir support rc.tcl]
 set cfg(tracks) [file join $flow_dir support tracks.tcl]
 set cfg(rcx) [file join $flow_dir support rcx.rules]
 set cfg(stage) [setting RSC_STAGE grt]
-set cfg(mode) routability
 set cfg(threads) [setting RSC_THREADS 8]
 set cfg(util) [setting RSC_UTIL 0.90]
 set cfg(width) [setting RSC_WIDTH_SITES 0]

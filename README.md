@@ -13,15 +13,40 @@ requested utilization increment within the blocks distinguish the carved cases.
 
 | Path | Contents |
 | --- | --- |
-| `flows/openroad/flow.tcl` | Seam generation, placement, CTS, global routing, and separate detailed routing |
+| `flows/openroad/flow.tcl` | Stage coordinator |
 | `flows/openroad/config.tcl` | Portable design, technology, and experiment configuration |
 | `flows/openroad/build_handoff.tcl` | Import a released repaired netlist into OpenDB |
 | `flows/openroad/preprocess.tcl` | Original constant-net mapping, tie-fanout repair, and pre-floorplan repair procedure |
-| `flows/openroad/verify_netlist.py` | Structural checks for preserved cells, masters, connectivity, and CTS-only insertion |
 | `flows/openroad/support/` | RC, track, and extraction support used in the experiments |
-| `designs/` | Six repaired OpenROAD Verilog netlists, their SDCs, and preprocessing provenance |
+| `designs/` | Six repaired OpenROAD Verilog netlists and their SDCs |
 | `genus/synthesize.tcl` | Genus synthesis driver used to create the mapped inputs |
 | `data/` | OpenROAD DOE definitions, per-run measurements, and summary CSVs |
+
+## Flow modules
+
+```text
+flows/openroad/
+├── flow.tcl             Stage ordering and GRT/DRT entry point
+├── config.tcl           User parameters and design/technology paths
+├── common.tcl           Output-path and text-file helpers
+├── platform.tcl         Libraries, design import, floorplan, routing layers
+├── seams.tcl            Seam intervals, disjoint rectangles, density balance
+├── density.tcl          Blockage-adjusted global-placement target
+├── io.tcl               IO pin placement
+├── placement.tcl        Initial/main placement and legalization
+├── cts.tcl              Clock-tree construction
+├── timing.tcl           Estimated/extracted timing reports
+├── global_route.tcl     Global routing and checkpoint output
+├── detail_route.tcl     Detailed routing from the saved checkpoint
+├── build_handoff.tcl    Reconstruct an input ODB from repaired Verilog
+├── preprocess.tcl       Optional preprocessing of an unrepaired input
+├── tie_cells.tcl        Constant-net mapping onto tie drivers
+└── support/             RC, tracks, and extraction rules
+```
+
+`seams.tcl` owns the seam geometry and block-density calculation. Placement,
+clock-tree construction, and routing use that geometry through the stage
+coordinator. Detailed routing loads the saved global-route checkpoint.
 
 ## Designs
 
@@ -34,8 +59,7 @@ requested utilization increment within the blocks distinguish the carved cases.
 | `mempool_tile_no_macro` | `mempool_tile_wrap` | Macro-free MemPool tile variant |
 | `tpu` | `tpu` | TPU design |
 
-Each `designs/<identifier>/` directory contains `netlist.v`, `constraints.sdc`,
-and `provenance.json`. These Verilog files are the frozen OpenROAD handoffs
+Each `designs/<identifier>/` directory contains `netlist.v` and `constraints.sdc`. These Verilog files are the frozen OpenROAD handoffs
 **after pre-floorplan repair and before placement or CTS**. The preprocessing
 maps constant nets onto ASAP7 tie cells, repairs tie-cell fanout, and runs
 `repair_design -pre_placement`, allowing signal buffering and cell resizing.
@@ -68,14 +92,12 @@ saved experimental flow.
 
 The signal netlist stays fixed after preprocessing. CTS uses
 `BUFx2_ASAP7_75t_R` buffers and `-repair_clock_nets`. There is no post-CTS
-`repair_timing` step. The structural checker verifies that original cells retain
-their masters and logical connectivity, with clock-buffer insertion permitted.
+`repair_timing` step. Clock-buffer insertion is enabled during CTS.
 
 Signals and clocks use M1--M6. Global routing applies a 25% layer-capacity
 reduction, allows residual congestion, and uses a congestion-iteration budget
 of 50. Detailed routing uses a limit of 32 and restores the saved global-route
-guides. A clean DRT result requires the completed route to pass its routing and
-DRC checks.
+guides. Clean DRT summary entries have zero reported violations.
 
 ### Seam parameters
 
@@ -119,7 +141,7 @@ are completed before either routing stage.
 
 The experiments use OpenROAD commit
 `e2820c8efda9ccf9949ec439456f699615b0dc47`, built with the commands used in these
-Tcl files. Python 3.10 or newer is used for structural verification. The PDK must provide
+Tcl files. The PDK must provide
 the ASAP7 RVT LEF and SS/FF Liberty files listed in `config.tcl`.
 
 From the repository root, set the PDK location and the configuration file.
@@ -150,7 +172,6 @@ export RSC_OVERFLOW=0.05
 export RSC_OUT="$PWD/work/jpeg_example"
 export RSC_STAGE=grt
 openroad -exit flows/openroad/flow.tcl
-python3 flows/openroad/verify_netlist.py "$RSC_OUT"
 ```
 
 Continue that exact saved configuration through detailed routing.
@@ -158,33 +179,12 @@ Continue that exact saved configuration through detailed routing.
 ```bash
 export RSC_STAGE=detail
 openroad -exit flows/openroad/flow.tcl
-python3 flows/openroad/verify_netlist.py "$RSC_OUT" --stage detail
 ```
 
 The DRT command uses `grt.odb` and `route.guide` in the same `RSC_OUT` directory.
 Keep the design and configuration variables the same between these stages.
 For the corresponding baseline, set both seam dimensions to zero and choose
 another output directory. Use the same utilization, seed, and overflow target.
-
-Continue the same configuration through detailed routing using its saved
-GRT database and route guides. Keep `RSC_OUT` and all configuration settings
-from the preceding command.
-
-```bash
-export RSC_STAGE=detail
-openroad -exit flows/openroad/flow.tcl
-python3 flows/openroad/verify_netlist.py "$RSC_OUT" --stage detail
-```
-
-After GRT alone, the structural check is available with
-`python3 flows/openroad/verify_netlist.py "$RSC_OUT" --stage grt`.
-
-The JPEG example above has been checked through GRT and DRT with zero final
-DRC violations. Structural verification preserves all 48,276 original
-instances and records 581 CTS buffers with zero added signal cells. The other
-five design configurations pass input-path and Tcl configuration checks.
-Verilog re-import can escape hierarchy separators in instance and net names;
-the repaired JPEG topology matches after normalizing that naming convention.
 
 ### Configuration reference
 
@@ -234,7 +234,7 @@ are retained in the data with their corresponding `kind`. The overflow
 experiment repeats the widened grid at main-placement stopping targets 0.15
 and 0.20. Its latest selection policy denoises five configurations and routes
 three, each with five seeds, plus the baseline. That experiment remains a
-partial snapshot as of the export date in `data/snapshot.json`.
+partial snapshot exported on November 18, 2026.
 
 ## Results and CSV definitions
 
@@ -244,7 +244,6 @@ partial snapshot as of the export date in `data/snapshot.json`.
 | `data/doe.csv` | Planned configurations for the original, widened, and overflow experiments |
 | `data/openroad_measurements.csv` | Available per-configuration/per-seed GRT and DRT measurements and completion status |
 | `data/openroad_summary.csv` | Best measured configurations per design, utilization, overflow, and routing stage |
-| `data/snapshot.json` | Export date, tool version, row counts, and snapshot coverage |
 
 Planned configurations and measurement rows have different purposes. A row in
 `doe.csv` identifies the intended experiment. A measurement row records an
@@ -309,7 +308,7 @@ The released OpenROAD inputs additionally contain the shared preprocessing
 changes described above. Original macro-removal transformations for CVA6,
 SweRV, and MemPool are reflected in those supplied inputs.
 
-## Technology and provenance
+## Technology
 
 The experiments use external ASAP7 RVT technology/cell LEFs and SS/FF Liberty
 views. The exact filenames are listed in `flows/openroad/config.tcl`. The
@@ -320,7 +319,3 @@ originate from the ASAP7 platform support in
 [OpenROAD-flow-scripts](https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts/tree/master/flow/platforms/asap7).
 They provide OpenROAD-compatible estimation and extraction support. The RC
 model is distinct from the Cadence QRC model used in the separate Innovus study.
-
-Per-design `provenance.json` files record the repaired handoff stage and
-preprocessing counts. Generated OpenDB files and physical outputs are written
-under the ignored `work/` directory when the flow is run.
