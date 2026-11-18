@@ -219,7 +219,7 @@ uniform run (`openroad -exit -metrics uniform_metrics.json flow/openroad/flow.tc
 - `flow/genus/config.tcl`: synthesis configuration.
 - `flow/genus/synthesize.tcl`: synthesis script.
 
-Genus scripts and synthesis netlist outputs are included in this repository. Note that no benchmarking of the commercial tool is intended, and no benchmarking should be inferred. We reproduce
+Genus scripts and synthesis netlist outputs are included in this repository. Note that no benchmarking of the commercial tool is intended, and no benchmarking should be inferred. We reproduce the following notice:
 
 ```
 # This script was written and developed by XXXX. However, the underlying commands and reports are copyrighted by Cadence.
