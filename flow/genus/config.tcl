@@ -1,7 +1,6 @@
-# Underlying commands and reports are copyrighted by Cadence. 
+# This script was written and developed by XXXX. However, the underlying commands and reports are copyrighted by Cadence.
 # We thank Cadence for granting permission to share our research to help promote and foster the next generation of innovators.
 
-# Supply RTL paths here when running synthesis.
 set flow_dir [file dirname [file normalize [info script]]]
 set repo_root [file normalize [file join $flow_dir ../..]]
 set pdk [file join $repo_root pdk ASAP7]
