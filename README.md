@@ -143,6 +143,8 @@ an alternate mapped input. Input and output paths are configured in
 | `data/openroad_measurements.csv` | Available per-configuration/per-seed GRT and DRT measurements and completion status |
 | `data/openroad_summary.csv` | Best measured configurations per design, utilization, overflow, and routing stage |
 | `data/openroad_stage_metrics.csv` | Per-run HPWL before and after each legalization step, utilization, and seam geometry of the `control` experiment |
+| `data/openroad_timing_power_runs.csv` | Per-seed post-route timing and power for baselines and best-rWL configurations |
+| `data/openroad_timing_power_summary.csv` | Baseline and RSC medians and timing/power improvements |
 
 `doe.csv` lists planned configurations for the experiment set. Measurement
 rows record available results for each configuration and seed. Reused results
@@ -174,6 +176,16 @@ Wirelength columns use native router measurements, including routed clock
 networks. DRT summary comparisons use clean completed samples. Per-run rows
 retain available wirelength measurements and native violation counts. Empty
 fields indicate unavailable measurements.
+
+Timing and power use final routed designs with OpenRCX-extracted SPEF.
+WNS and TNS are setup metrics in picoseconds. Static power is cell leakage;
+dynamic power is internal plus switching power, in milliwatts, reported at SS
+with default activity estimates. Each summary metric is the median of its
+available seeds. Positive improvement values mean less-negative slack or lower
+power. WNS/TNS percentage improvements normalize the change by the absolute
+baseline median; power improvements are `100 * (1 - RSC / baseline)`.
+Sample counts identify partial coverage; missing baselines leave comparisons
+empty. These timing/power CSVs cover the `control` placement overflow of 0.05.
 
 `openroad_stage_metrics.csv` has one row per run of the `control` experiment,
 identified by `design`, `util_pct`, `config` and `placement_seed` as in
