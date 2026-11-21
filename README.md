@@ -234,6 +234,6 @@ uniform run (`openroad -exit -metrics uniform_metrics.json flow/openroad/flow.tc
 Genus scripts and synthesis netlist outputs are included in this repository. Note that no benchmarking of the commercial tool is intended, and no benchmarking should be inferred. We reproduce the following notice:
 
 ```
-# This script was written and developed by XXXX. However, the underlying commands and reports are copyrighted by Cadence.
+# This script was written and developed by ABKGroup students at UCSD. However, the underlying commands and reports are copyrighted by Cadence.
 # We thank Cadence for granting permission to share our research to help promote and foster the next generation of innovators.
 ```
